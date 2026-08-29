@@ -1,7 +1,7 @@
 [project]
 name = "pipeline-btw"
 version = "0.1.0"
-description = "Add your description here"
+description = "Writing a baby pipeline btw"
 readme = "README.md"
 authors = [
     { name = "Kieran Pedrick", email = "kieran@aileks.dev" }
