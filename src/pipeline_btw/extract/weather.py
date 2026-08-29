@@ -28,14 +28,14 @@ def geocode(location):
         raise ValueError(f"Location not found: {location}")
 
     return {
-        "lat": data["results"][0]["latitude"],
-        "long": data["results"][0]["longitude"],
+        "latitude": data["results"][0]["latitude"],
+        "longitude": data["results"][0]["longitude"],
     }
 
 
 def get_forecast(location):
     location_data = geocode(location)
-    lat, long = location_data["lat"], location_data["long"]
+    lat, long = location_data["latitude"], location_data["longitude"]
 
     response = httpx.get(
         FORECAST_API_URL,
@@ -45,6 +45,7 @@ def get_forecast(location):
             "past_days": 0,
             "forecast_days": 1,
             "timezone": "auto",
+            "temperature_unit": "fahrenheit",
             "hourly": [
                 "temperature_2m",
                 "relative_humidity_2m",
@@ -61,6 +62,41 @@ def get_forecast(location):
     return {"location": location, **data}
 
 
+def get_hourly_data(data):
+    hourly = data["hourly"]
+
+    rows = zip(
+        hourly["time"],
+        hourly["temperature_2m"],
+        hourly["relative_humidity_2m"],
+        hourly["precipitation"],
+        hourly["weather_code"],
+        hourly["wind_speed_10m"],
+        strict=True,
+    )
+
+    rows = [
+        (
+            time,
+            temperature,
+            humidity,
+            precipitation,
+            weather_code,
+            wind_speed,
+        )
+        for (
+            time,
+            temperature,
+            humidity,
+            precipitation,
+            weather_code,
+            wind_speed,
+        ) in rows
+    ]
+
+    return rows
+
+
 def init_db():
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
@@ -69,33 +105,76 @@ def init_db():
             """
             CREATE TABLE IF NOT EXISTS weather (
                 id TEXT PRIMARY KEY,
-                location TEXT,
+                location TEXT NOT NULL,
+                latitude REAL NOT NULL,
+                longitude REAL NOT NULL,
+                time TEXT NOT NULL,
                 temperature REAL,
+                humidity INTEGER,
+                precipitation REAL,
+                weather_code INTEGER,
+                wind_speed REAL,
                 inserted_at TEXT NOT NULL
             )
             """
         )
-        conn.commit()
 
 
-def insert_data(record):
-    record_id = str(uuid.uuid4())
+def insert_record(record):
     location = record["location"]
-    temperature = record["hourly"]["temperature_2m"]
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.execute(
-            """
-            INSERT INTO weather (id, location, temperature, inserted_at)
-            VALUES(?, ?, ?)
-            """,
-            (record_id, location, datetime.now(UTC).isoformat()),
+    latitude = record["latitude"]
+    longitude = record["longitude"]
+    hourly_data = get_hourly_data(record)
+    inserted_at = datetime.now(UTC).isoformat()
+
+    rows = [
+        (
+            str(uuid.uuid4()),
+            location,
+            latitude,
+            longitude,
+            time,
+            temperature,
+            humidity,
+            precipitation,
+            weather_code,
+            wind_speed,
+            inserted_at,
         )
-        conn.commit()
+        for (
+            time,
+            temperature,
+            humidity,
+            precipitation,
+            weather_code,
+            wind_speed,
+        ) in hourly_data
+    ]
 
-    return record_id
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.executemany(
+            """
+            INSERT INTO weather (
+                id,
+                location,
+                latitude,
+                longitude,
+                time,
+                temperature,
+                humidity,
+                precipitation,
+                weather_code,
+                wind_speed,
+                inserted_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            rows,
+        )
+
+    return f"{len(rows)} records inserted"
 
 
+init_db()
 weather = get_forecast("Los Angeles, CA")
-print(weather)
-# init_db()
-# insert_data(weather)
+insert_record(weather)
