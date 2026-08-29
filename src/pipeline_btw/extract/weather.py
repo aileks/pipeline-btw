@@ -1,5 +1,11 @@
+import sqlite3
+import uuid
+from datetime import UTC, datetime
+from pathlib import Path
+
 import httpx
 
+DB_PATH = Path("../../data/weather.db")
 GEOCODE_API_URL = "https://geocoding-api.open-meteo.com/v1/search"
 FORECAST_API_URL = "https://api.open-meteo.com/v1/forecast"
 
@@ -55,11 +61,34 @@ def get_forecast(location):
     return {"location": location, **data}
 
 
-weather = get_forecast("Los Angeles, CA")
+def init_db():
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
-for k, v in weather.items():
-    if k == "hourly":
-        for kk, vv in v.items():
-            print(f"{kk}: {vv}\n")
-    else:
-        print(f"{k}: {v}\n")
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS weather (
+                id TEXT PRIMARY KEY,
+                location TEXT,
+                temperature REAL,
+                inserted_at TEXT NOT NULL
+            )
+            """
+        )
+        conn.close()
+
+
+def insert_data(record):
+    location = record["location"]
+    temperature = record["temperature_2m"]
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            """
+            INSERT INTO weather (id, location, temperature, inserted_at)
+            VALUES(?, ?, ?, ?)
+            """,
+            (str(uuid.uuid4()), location, temperature, datetime.now(UTC).isoformat()),
+        )
+
+
+weather = get_forecast("Los Angeles, CA")
