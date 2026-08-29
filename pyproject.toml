@@ -7,7 +7,15 @@ authors = [
     { name = "Kieran Pedrick", email = "kieran@aileks.dev" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "dbt-sqlite>=1.10.0",
+    "httpx>=0.28.1",
+    "pydantic>=2.13.5",
+    "pytest>=9.1.1",
+    "ruff>=0.16.5",
+    "sqlfluff>=4.3.0",
+    "sqlfluff-templater-dbt>=4.3.0",
+]
 
 [project.scripts]
 pipeline-btw = "pipeline_btw:main"
