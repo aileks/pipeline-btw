@@ -5,7 +5,7 @@ from pathlib import Path
 
 import httpx
 
-DB_PATH = Path("../../data/weather.db")
+DB_PATH = Path(__file__).resolve().parents[3] / "data" / "weather.db"
 GEOCODE_API_URL = "https://geocoding-api.open-meteo.com/v1/search"
 FORECAST_API_URL = "https://api.open-meteo.com/v1/forecast"
 
@@ -75,20 +75,27 @@ def init_db():
             )
             """
         )
-        conn.close()
+        conn.commit()
 
 
 def insert_data(record):
+    record_id = str(uuid.uuid4())
     location = record["location"]
-    temperature = record["temperature_2m"]
+    temperature = record["hourly"]["temperature_2m"]
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute(
             """
             INSERT INTO weather (id, location, temperature, inserted_at)
-            VALUES(?, ?, ?, ?)
+            VALUES(?, ?, ?)
             """,
-            (str(uuid.uuid4()), location, temperature, datetime.now(UTC).isoformat()),
+            (record_id, location, datetime.now(UTC).isoformat()),
         )
+        conn.commit()
+
+    return record_id
 
 
 weather = get_forecast("Los Angeles, CA")
+print(weather)
+# init_db()
+# insert_data(weather)
