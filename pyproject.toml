@@ -1,0 +1,17 @@
+[project]
+name = "pipeline-btw"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Kieran Pedrick", email = "kieran@aileks.dev" }
+]
+requires-python = ">=3.12"
+dependencies = []
+
+[project.scripts]
+pipeline-btw = "pipeline_btw:main"
+
+[build-system]
+requires = ["uv_build>=0.12.7,<0.13.0"]
+build-backend = "uv_build"
