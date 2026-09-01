@@ -5,4 +5,3 @@ dist/
 wheels/
 *.egg-info
 .venv
-data/*.db
