@@ -10,6 +10,7 @@ requires-python = ">=3.12"
 dependencies = [
     "dbt-postgres>=1.11.0",
     "httpx>=0.28.1",
+    "psycopg[binary]>=3.3.5",
     "pyarrow>=25.0.1",
     "pydantic>=2.13.5",
 ]
@@ -23,6 +24,7 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "dotenv>=0.9.9",
     "pytest>=9.1.1",
     "ruff>=0.16.5",
     "sqlfluff>=4.3.0",
