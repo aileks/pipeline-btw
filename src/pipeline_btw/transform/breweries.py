@@ -1,4 +1,5 @@
 def transform_data(breweries_data_raw):
+    print("Transforming data...")
     breweries_data_cleaned = [
         {
             "id": brewery["id"],
