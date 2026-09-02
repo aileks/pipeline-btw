@@ -26,8 +26,9 @@ def fetch_data(params: dict, max_retries: int = 3):
 
             delay = 2**attempt
             logger.warning(
-                "Request failed. Retrying attempt %d/%d",
+                "Request failed: %s - %s. Retrying attempt %d/%d in %d seconds",
                 type(e).__name__,
+                e,
                 attempt + 1,
                 max_retries,
             )
@@ -42,8 +43,9 @@ def fetch_data(params: dict, max_retries: int = 3):
 
             delay = 2**attempt
             logger.warning(
-                "Request failed. Retrying attempt %d/%d in %d seconds",
+                "Request failed: %s - %s. Retrying attempt %d/%d in %d seconds",
                 type(e).__name__,
+                e,
                 attempt + 1,
                 max_retries,
                 delay,
