@@ -38,7 +38,23 @@ def load_data(data):
                     %(phone)s,
                     %(website_url)s
                 )
-                ON CONFLICT UPDATE
-                """,
+                ON CONFLICT (id)
+                DO UPDATE SET
+                    brewery_type=Excluded.brewery_type,
+                    name=Excluded.name,
+                    address_1=Excluded.address_1,
+                    address_2=Excluded.address_2,
+                    address_3=Excluded.address_3,
+                    city=Excluded.city,
+                    state_province=Excluded.state_province,
+                    postal_code=Excluded.postal_code,
+                    country=Excluded.country,
+                    longitude=Excluded.longitude,
+                    latitude=Excluded.latitude,
+                    phone=Excluded.phone,
+                    website_url=Excluded.website_url,
+                    updated_at=CURRENT_TIMESTAMP
+            """,
                 data,
             )
+    print(f"Inserted {len(data)} rows.")

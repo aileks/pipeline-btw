@@ -6,5 +6,6 @@ raw_data = extract_data()
 cleaned_data = transform_data(raw_data)
 try:
     load_data(cleaned_data)
+    print("Data loaded successfully!")
 except Exception as e:
     print(f"Data loading failed: {e}")
