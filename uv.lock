@@ -818,6 +818,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "dbt-postgres" },
+    { name = "dotenv" },
     { name = "httpx" },
     { name = "psycopg", extra = ["binary"] },
     { name = "pyarrow" },
@@ -826,7 +827,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "dotenv" },
     { name = "pytest" },
     { name = "ruff" },
     { name = "sqlfluff" },
@@ -836,6 +836,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "dbt-postgres", specifier = ">=1.11.0" },
+    { name = "dotenv", specifier = ">=0.9.9" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.5" },
     { name = "pyarrow", specifier = ">=25.0.1" },
@@ -844,7 +845,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "dotenv", specifier = ">=0.9.9" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "ruff", specifier = ">=0.16.5" },
     { name = "sqlfluff", specifier = ">=4.3.0" },
