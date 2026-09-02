@@ -9,3 +9,4 @@ try:
     print("Data loaded successfully!")
 except Exception as e:
     print(f"Data loading failed: {e}")
+    raise

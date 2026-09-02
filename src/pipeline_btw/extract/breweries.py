@@ -15,6 +15,6 @@ def extract_data(row_limit=200):
             page += 1
             params["page"] = page
         except Exception as e:
-            print(f"\nSomething went wrong: {e}\n")
+            print(f"Extracting data failed: {e}")
             raise
     return breweries[:row_limit]

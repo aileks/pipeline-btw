@@ -2,6 +2,8 @@ from pipeline_btw.db.connection import get_connection
 
 
 def load_data(data):
+    print("Loading data...")
+
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.executemany(
@@ -57,4 +59,5 @@ def load_data(data):
             """,
                 data,
             )
+
     print(f"Inserted {len(data)} rows.")
