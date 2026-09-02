@@ -1,8 +1,12 @@
+import logging
+
 from pipeline_btw.db.connection import get_connection
 
+logger = logging.getLogger(__name__)
 
-def load_data(data):
-    print("Loading data...")
+
+def load_data(data: list[dict]):
+    logger.info("Loading data...")
 
     with get_connection() as conn:
         with conn.cursor() as cur:
@@ -60,4 +64,4 @@ def load_data(data):
                 data,
             )
 
-    print(f"Inserted {len(data)} rows.")
+    logger.info(f"Inserted {len(data)} rows.")

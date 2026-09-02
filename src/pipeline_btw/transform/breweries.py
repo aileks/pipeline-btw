@@ -1,5 +1,11 @@
-def transform_data(breweries_data_raw):
-    print("Transforming data...")
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+def transform_data(breweries_data_raw: list[dict]):
+    logger.info("Transforming data...")
+
     breweries_data_cleaned = [
         {
             "id": brewery["id"],
@@ -21,4 +27,5 @@ def transform_data(breweries_data_raw):
         }
         for brewery in breweries_data_raw
     ]
+
     return breweries_data_cleaned

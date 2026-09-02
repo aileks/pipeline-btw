@@ -16,7 +16,7 @@ def main():
     try:
         logger.info("Pipeline started")
 
-        raw_data = extract_data(5000)
+        raw_data = extract_data(50)
         cleaned_data = transform_data(raw_data)
         load_data(cleaned_data)
 
@@ -25,3 +25,6 @@ def main():
     except Exception:
         logger.exception("Pipeline failed")
         raise
+
+
+main()

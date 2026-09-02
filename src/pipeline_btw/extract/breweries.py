@@ -1,8 +1,12 @@
+import logging
+
 from pipeline_btw.client.api import fetch_data
 
+logger = logging.getLogger(__name__)
 
-def extract_data(row_limit=200):
-    print("Extracting data...")
+
+def extract_data(row_limit: int = 200):
+    logger.info("Extracting data...")
     page = 1
     breweries = []
     params = {"per_page": 200, "page": page}
@@ -15,6 +19,6 @@ def extract_data(row_limit=200):
             page += 1
             params["page"] = page
         except Exception as e:
-            print(f"Extracting data failed: {e}")
+            logger.exception("Failed while extracting")
             raise
     return breweries[:row_limit]
