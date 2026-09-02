@@ -1,8 +1,4 @@
-from pipeline_btw.extract.breweries import extract_data
-
-
-def transform_data():
-    breweries_data_raw = extract_data()
+def transform_data(breweries_data_raw):
     breweries_data_cleaned = [
         {
             "id": brewery["id"],
