@@ -16,7 +16,7 @@ def main():
     try:
         logger.info("Pipeline started")
 
-        raw_data = extract_data(50)
+        raw_data = extract_data(5000, 200)
         cleaned_data = transform_data(raw_data)
         load_data(cleaned_data)
 

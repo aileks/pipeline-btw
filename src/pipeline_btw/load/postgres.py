@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 
 def load_data(data: list[dict]):
-    logger.info("Loading data...")
+    logger.info("Loading %d rows", len(data))
 
     with get_connection() as conn:
         with conn.cursor() as cur:
@@ -64,4 +64,4 @@ def load_data(data: list[dict]):
                 data,
             )
 
-    logger.info(f"Inserted {len(data)} rows.")
+    logger.info("Processed %d rows", len(data))

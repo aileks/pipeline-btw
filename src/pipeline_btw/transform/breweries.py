@@ -3,10 +3,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def transform_data(breweries_data_raw: list[dict]):
-    logger.info("Transforming data...")
+def transform_data(data_raw: list[dict]):
+    logger.info("Transforming %d rows", len(data_raw))
 
-    breweries_data_cleaned = [
+    data_cleaned = [
         {
             "id": brewery["id"],
             "brewery_type": brewery["brewery_type"],
@@ -25,7 +25,7 @@ def transform_data(breweries_data_raw: list[dict]):
             "phone": brewery["phone"],
             "website_url": brewery["website_url"],
         }
-        for brewery in breweries_data_raw
+        for brewery in data_raw
     ]
 
-    return breweries_data_cleaned
+    return data_cleaned
