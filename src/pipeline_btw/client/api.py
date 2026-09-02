@@ -24,13 +24,13 @@ def fetch_data(params: dict, max_retries: int = 3):
             if attempt == max_retries:
                 raise
 
+            delay = 2**attempt
             logger.warning(
                 "Request failed. Retrying attempt %d/%d",
                 attempt + 1,
                 max_retries,
             )
-
-            time.sleep(2**attempt)
+            time.sleep(delay)
 
         except httpx.HTTPStatusError as exc:
             if exc.response.status_code not in RETRYABLE_STATUS_CODES:
@@ -39,10 +39,11 @@ def fetch_data(params: dict, max_retries: int = 3):
             if attempt == max_retries:
                 raise
 
+            delay = 2**attempt
             logger.warning(
-                "Request failed. Retrying attempt %d/%d",
+                "Request failed. Retrying attempt %d/%d in %d seconds",
                 attempt + 1,
                 max_retries,
+                delay,
             )
-
-            time.sleep(2**attempt)
+            time.sleep(delay)
