@@ -25,6 +25,3 @@ def main():
     except Exception:
         logger.exception("Pipeline failed")
         raise
-
-
-main()
