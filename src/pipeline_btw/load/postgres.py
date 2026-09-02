@@ -38,6 +38,7 @@ def load_data(data):
                     %(phone)s,
                     %(website_url)s
                 )
+                ON CONFLICT UPDATE
                 """,
                 data,
             )
