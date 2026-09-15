@@ -2,6 +2,8 @@
 
 Pipeline practice on the [Breweries API](https://openbrewerydb.org) using ETL and Pydantic validation.
 
+Airflow runs two supported ways: locally or through Docker Compose.
+
 ## Python environment
 
 ```bash
@@ -12,34 +14,35 @@ source .venv/bin/activate
 deactivate
 ```
 
-## Airflow
+## Local Airflow
 
-`docker-compose.yaml` defines the Airflow 3.3 stack: postgres, redis, api-server, scheduler, dag-processor, and celery worker. The first startup runs database migrations, creates the config file, and adds an admin user.
+Requires a local postgres instance. Both the `airflow` metadata database and the `breweries` pipeline database live there.
 
-### Setup
+Copy `.env.example` to `.env` and set:
+
+- `AIRFLOW__DATABASE__SQL_ALCHEMY_CONN` - the `airflow` metadata database (create it once with `createdb airflow`)
+- `DB_URL` - the `breweries` pipeline database the DAG writes to
+- `AIRFLOW_HOME`, `AIRFLOW__CORE__EXECUTOR`, `AIRFLOW__CORE__DAGS_FOLDER` - defaults in `.env.example`; run airflow from the repo root so the relative `dags` path resolves
 
 ```bash
-cp .env.example .env
+uv run --env-file .env airflow standalone
 ```
 
-Edit `.env`:
+That starts the `api-server`, `scheduler`, `dag-processor`, and `triggerer`, runs database migrations, and creates an admin user. A password is generated and printed on first startup. Open [http://localhost:8080](http://localhost:8080) for the web UI.
 
-> [!NOTE]  
-> When using rootless Podman, you will run into permissions issues due to containers getting assigned a subuid.
-> Set `AIRFLOW_UID=0` so the container acts as your host user.
+Useful commands:
 
-- Set `AIRFLOW_UID` to your user id so the bind-mounted `dags/`, `logs/`, `config/`, and `plugins/` directories stay owned by you.
-- Every other variable in `.env` is passed into the Airflow containers, e.g. `DB_URL`.
-- Optional: set `FERNET_KEY` to encrypt saved connections. Generate one with:
+```bash
+uv run --env-file .env airflow dags list
+uv run --env-file .env airflow dags list-import-errors
+uv run --env-file .env airflow dags test breweries_etl
+```
 
-  ```bash
-  podman run --rm docker.io/apache/airflow:3.3.1 python -c \
-    "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-  ```
+`.airflow/` holds the local state (logs, generated config) and is gitignored.
 
-The web UI is at [http://localhost:8080](http://localhost:8080), log in with `airflow` as both username and password. Override the credentials with `_AIRFLOW_WWW_USER_USERNAME` and `_AIRFLOW_WWW_USER_PASSWORD` in `.env` before the first startup.
+## Docker Compose
 
-### Docker
+For Docker, `docker-compose.yaml` provides the full stack including postgres. Make sure to copy `.env.example` to `.env` and set your variables.
 
 ```bash
 docker compose up -d
@@ -49,38 +52,40 @@ docker compose exec airflow-scheduler airflow dags list
 docker compose down    # add -v to also delete the postgres data volume
 ```
 
-### Podman
+### Extended image
 
-Image names in `docker-compose.yaml` are fully qualified (`docker.io/...`) so rootless podman can resolve them.
+The compose file builds an extended image instead of using the stock one. The `Dockerfile` layers the DAG's dependencies from `requirements.txt`, pinned to the versions in `uv.lock`, on top of the stock airflow image. This ensures imports work in the containers without installing anything at startup. Rebuild after changing dependencies with:
 
 ```bash
-podman-compose up -d
-podman-compose ps
-podman-compose logs -f airflow-scheduler
-podman-compose exec airflow-scheduler airflow dags list
-podman-compose down    # add -v to also delete the postgres data volume
+docker compose build
 ```
 
-### DAGs
+To use the stock image instead, swap the commented `image:`/`build:` lines in `docker-compose.yaml` and set `_PIP_ADDITIONAL_REQUIREMENTS` in `.env` - it pip-installs on every container start, which is slower but avoids image builds.
 
-Drop DAG files into `dags/`; the dag-processor picks them up without a restart. New DAGs start paused, so unpause in the UI or run `airflow dags unpause <dag_id>`. Airflow's example DAGs ship enabled; set `AIRFLOW__CORE__LOAD_EXAMPLES` to `"false"` in `docker-compose.yaml` to turn them off.
+## Podman
+
+The compose path is Docker-only on purpose. Podman is rootless and daemonless, which is great for security, but it makes orchestrating a stack of interconnected containers like Airflow much harder.
+
+- UID mapping: rootless podman maps container uids to host subuids, so the `airflow-init` container's `chown -R $AIRFLOW_UID:0` hands your bind-mounted directories to a subuid. This causes files to become inaccessible to your own user. Setting `AIRFLOW_UID=0` fixes it, at the cost of container processes running with your full identity.
+- HOME: podman sets `HOME` to the image workdir for uids missing from `/etc/passwd`, which broke the airflow import.
+- File modes: restrictive file modes (600/700) plus the `chown` run in `airflow-init` locked files away from both sides. Keep mounted files at 644/755.
+
+### A note on DockerOperator
+
+DockerOperator (from `apache-airflow-providers-docker`, or the `@task.docker` decorator) is the modern solution for the Airflow docker stack. It allows running Airflow itself directly and launches each task in its own container. Since this pipeline is pure Python with nothing beyond the venv, I'm not using here. If a task ever needs a heavy or conflicting dependency, that is when I'd reach for it.
 
 ## Database
 
-Pipeline tables live in `src/pipeline_btw/db/`: `schema.sql` plus numbered SQL files in `migrations/`. There is no migration runner, so apply them by hand. Both a local postgres and the stack's postgres are supported targets; they are reached differently.
+Pipeline tables live in `src/pipeline_btw/db/`: `schema.sql` plus numbered SQL files in `migrations/`. There is no migration runner, so apply them by hand with psql, in filename order. `schema.sql` is idempotent; the migrations are not, so re-running one fails on the existing columns.
 
-### Local postgres
-
-When `DB_URL` in `.env` points at your own postgres, apply the files with psql from the host as usual:
+Local path:
 
 ```bash
 psql "$DB_URL" -f src/pipeline_btw/db/schema.sql
 psql "$DB_URL" -f src/pipeline_btw/db/migrations/001_add_timestamps.sql
 ```
 
-### Airflow stack postgres
-
-Airflow's postgres database is only reachable inside the compose network as `postgres:5432`. Pipe the files through `psql` in the container:
+Docker path (postgres is only reachable inside the compose network as `postgres:5432`):
 
 ```bash
 # separate database so pipeline tables don't sit next to airflow's metadata tables
@@ -90,20 +95,6 @@ docker exec -i pipeline-btw_postgres_1 psql -v ON_ERROR_STOP=1 -U airflow -d bre
 docker exec -i pipeline-btw_postgres_1 psql -v ON_ERROR_STOP=1 -U airflow -d breweries -f - < src/pipeline_btw/db/migrations/001_add_timestamps.sql
 ```
 
-To apply them from the host venv instead, publish a port on the `postgres` service (e.g. `55432:5432`, since 5432 is often taken by a local postgres) and point `DB_URL` at `postgresql://airflow:airflow@127.0.0.1:55432/breweries`.
-
-In both cases, apply `migrations/` in filename order.
-
 ### DAG targets
 
-DAG code runs inside the containers, where `DB_URL` comes from `docker-compose.yaml` and defaults to the stack postgres (`postgresql://airflow:airflow@postgres:5432/breweries`). To target your local postgres instead, set `PIPELINE_DB_URL` in `.env`, e.g. `postgresql://postgres@host.docker.internal:5432/postgres` (`host.containers.internal` for podman).
-
-### Python requirements in the containers
-
-The airflow image only ships its own dependencies, so anything your DAG imports must be installed into the containers with `_PIP_ADDITIONAL_REQUIREMENTS` in `.env`:
-
-```
-_PIP_ADDITIONAL_REQUIREMENTS="httpx psycopg psycopg-binary pydantic python-dotenv"
-```
-
-That covers everything `pipeline_btw` imports (httpx, psycopg, pydantic, dotenv). It reinstalls on every container start - fine for practice; switch to an extended image when it isn't.
+DAG code reads `DB_URL`. Locally that is your postgres (`breweries` database). Under compose, the compose file overrides `DB_URL` so DAG code uses the in-network postgres (`postgresql://airflow:airflow@postgres:5432/breweries`).

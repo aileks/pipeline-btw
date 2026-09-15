@@ -1,4 +1,4 @@
-from airflow.decorators import dag, task
+from airflow.sdk import dag, task
 from pendulum import datetime
 
 from pipeline_btw.extract.breweries import extract_data
