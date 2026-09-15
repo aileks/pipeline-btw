@@ -28,7 +28,9 @@ Copy `.env.example` to `.env` and set:
 uv run --env-file .env airflow standalone
 ```
 
-That starts the `api-server`, `scheduler`, `dag-processor`, and `triggerer`, runs database migrations, and creates an admin user. A password is generated and stored in `.airflow/simple_auth_manager_passwords.json.generated`. Open [http://localhost:8080](http://localhost:8080) for the web UI.
+That starts the `api-server`, `scheduler`, `dag-processor`, and `triggerer`, runs database migrations, and creates an admin user. The web UI lives at [localhost:8080](localhost:8080)
+
+A password is generated and stored in `.airflow/simple_auth_manager_passwords.json.generated`. To override it, set `AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS` in your .env
 
 Useful commands:
 
@@ -69,6 +71,8 @@ The compose path is Docker-only on purpose. Podman is rootless and daemonless, w
 - UID mapping: rootless podman maps container uids to host subuids, so the `airflow-init` container's `chown -R $AIRFLOW_UID:0` hands your bind-mounted directories to a subuid. This causes files to become inaccessible to your own user. Setting `AIRFLOW_UID=0` fixes it, at the cost of container processes running with your full identity.
 - HOME: podman sets `HOME` to the image workdir for uids missing from `/etc/passwd`, which broke the airflow import.
 - File modes: restrictive file modes (600/700) plus the `chown` run in `airflow-init` locked files away from both sides. Keep mounted files at 644/755.
+
+Of course, these issues don't exist on more modern alternatives, such as Dagster.
 
 ### A note on DockerOperator
 
