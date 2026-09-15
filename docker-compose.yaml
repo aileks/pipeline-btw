@@ -34,9 +34,9 @@ x-airflow-common: &airflow-common
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on: &airflow-common-depends-on
     redis:
-      condition: service_healthy
+      condition: service_started
     postgres:
-      condition: service_healthy
+      condition: service_started
 
 services:
   postgres:
@@ -147,7 +147,7 @@ services:
     depends_on:
       <<: *airflow-common-depends-on
       airflow-apiserver:
-        condition: service_healthy
+        condition: service_started
       airflow-init:
         condition: service_completed_successfully
 
