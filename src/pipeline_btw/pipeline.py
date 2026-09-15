@@ -7,6 +7,16 @@ from pipeline_btw.transform.breweries import transform_data
 logger = logging.getLogger(__name__)
 
 
+def run():
+    logger.info("Pipeline started")
+
+    raw_data = extract_data(5000, 200)
+    cleaned_data = transform_data(raw_data)
+    load_data(cleaned_data)
+
+    logger.info("Pipeline completed successfully")
+
+
 def main():
     logging.basicConfig(
         level=logging.INFO,
@@ -14,14 +24,7 @@ def main():
     )
 
     try:
-        logger.info("Pipeline started")
-
-        raw_data = extract_data(5000, 200)
-        cleaned_data = transform_data(raw_data)
-        load_data(cleaned_data)
-
-        logger.info("Pipeline completed successfully")
-
+        run()
     except Exception:
         logger.exception("Pipeline failed")
         raise

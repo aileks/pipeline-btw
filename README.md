@@ -101,4 +101,12 @@ In both cases, apply `migrations/` in filename order.
 
 DAG code runs inside the containers, where `DB_URL` comes from `docker-compose.yaml` and defaults to the stack postgres (`postgresql://airflow:airflow@postgres:5432/breweries`). To target your local postgres instead, set `PIPELINE_DB_URL` in `.env`, e.g. `postgresql://postgres@host.docker.internal:5432/postgres` (`host.containers.internal` for podman).
 
-DAGs importing `pipeline_btw` also need `psycopg` inside the containers; set `_PIP_ADDITIONAL_REQUIREMENTS=psycopg` in `.env` or install it in an extended image.
+### Python requirements in the containers
+
+The airflow image only ships its own dependencies, so anything your DAG imports must be installed into the containers with `_PIP_ADDITIONAL_REQUIREMENTS` in `.env`:
+
+```
+_PIP_ADDITIONAL_REQUIREMENTS="httpx psycopg psycopg-binary pydantic python-dotenv"
+```
+
+That covers everything `pipeline_btw` imports (httpx, psycopg, pydantic, dotenv). It reinstalls on every container start - fine for practice; switch to an extended image when it isn't.

@@ -6,7 +6,3 @@ wheels/
 *.egg-info
 .venv
 .env
-dags/
-logs/
-config/
-plugins/
