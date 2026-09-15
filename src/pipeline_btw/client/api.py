@@ -31,6 +31,7 @@ def fetch_data(params: dict, max_retries: int = 3):
                 e,
                 attempt + 1,
                 max_retries,
+                delay,
             )
             time.sleep(delay)
 
