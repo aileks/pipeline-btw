@@ -24,7 +24,7 @@ cp .env.example .env
 
 Edit `.env`:
 
-- Set `AIRFLOW_UID` to your user id so the bind-mounted `dags/`, `logs/`, `config/`, and `plugins/` directories stay owned by you. On Linux this should match your user id.
+- Set `AIRFLOW_UID` to your user id so the bind-mounted `dags/`, `logs/`, `config/`, and `plugins/` directories stay owned by you. With Podman, this should match the container's UID (usually 50000).
 - Every other variable in `.env` is passed into the Airflow containers, e.g. `DB_URL`.
 - Optional: set `FERNET_KEY` to encrypt saved connections. Generate one with:
 
