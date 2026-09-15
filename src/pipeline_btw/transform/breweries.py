@@ -81,7 +81,7 @@ class Brewery(BaseModel):
 
 
 def transform_data(raw_data: list[dict]):
-    logger.info("Validating %d rows", len(raw_data))
+    logger.info("Validating and transforming %d rows", len(raw_data))
 
     validated_data = []
     for row in raw_data:
@@ -94,27 +94,6 @@ def transform_data(raw_data: list[dict]):
             )
             continue
 
-    logger.info("Transforming %d rows", len(validated_data))
+    logger.info("Transformed %d rows", len(validated_data))
 
-    data_cleaned = [
-        {
-            "id": brewery["id"],
-            "brewery_type": brewery["brewery_type"],
-            "name": brewery["name"],
-            "address_1": brewery["address_1"],
-            "address_2": brewery["address_2"],
-            "address_3": brewery["address_3"],
-            "city": brewery["city"],
-            "state_province": brewery["state_province"],
-            "postal_code": brewery["postal_code"],
-            "country": brewery["country"],
-            "longitude": (
-                float(brewery["longitude"]) if brewery["longitude"] is not None else None
-            ),
-            "latitude": (float(brewery["latitude"]) if brewery["latitude"] is not None else None),
-            "phone": brewery["phone"],
-            "website_url": brewery["website_url"],
-        }
-        for brewery in validated_data
-    ]
-    return data_cleaned
+    return validated_data
