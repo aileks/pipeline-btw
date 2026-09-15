@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from pipeline_btw.load.postgres import Brewery
+from pipeline_btw.transform.breweries import Brewery
 
 
 def brewery_row(**overrides):
