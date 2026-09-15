@@ -28,7 +28,7 @@ Copy `.env.example` to `.env` and set:
 uv run --env-file .env airflow standalone
 ```
 
-That starts the `api-server`, `scheduler`, `dag-processor`, and `triggerer`, runs database migrations, and creates an admin user. A password is generated and printed on first startup. Open [http://localhost:8080](http://localhost:8080) for the web UI.
+That starts the `api-server`, `scheduler`, `dag-processor`, and `triggerer`, runs database migrations, and creates an admin user. A password is generated and stored in `.airflow/simple_auth_manager_passwords.json.generated`. Open [http://localhost:8080](http://localhost:8080) for the web UI.
 
 Useful commands:
 
