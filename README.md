@@ -1,4 +1,4 @@
-# Pipeline BTW
+# Pipeline - Breweries To Watch
 
 Pipeline practice on the [Breweries API](https://openbrewerydb.org) using ETL and Pydantic validation.
 
@@ -14,7 +14,7 @@ deactivate
 
 ## Airflow
 
-`docker-compose.yaml` defines the full Airflow 3.3 stack: postgres, redis, api-server, scheduler, dag-processor, celery worker, and triggerer. The first startup runs database migrations, creates the config file, and adds an admin user.
+`docker-compose.yaml` defines the Airflow 3.3 stack: postgres, redis, api-server, scheduler, dag-processor, and celery worker. The first startup runs database migrations, creates the config file, and adds an admin user.
 
 ### Setup
 
@@ -64,13 +64,6 @@ podman-compose down    # add -v to also delete the postgres data volume
 ### DAGs
 
 Drop DAG files into `dags/`; the dag-processor picks them up without a restart. New DAGs start paused, so unpause in the UI or run `airflow dags unpause <dag_id>`. Airflow's example DAGs ship enabled; set `AIRFLOW__CORE__LOAD_EXAMPLES` to `"false"` in `docker-compose.yaml` to turn them off.
-
-Optional services live behind compose profiles, e.g. Flower (celery monitor) on port 5555:
-
-```bash
-docker compose --profile flower up -d
-podman-compose --profile flower up -d
-```
 
 ## Database
 
