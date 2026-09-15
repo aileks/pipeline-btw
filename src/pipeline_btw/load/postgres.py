@@ -1,6 +1,16 @@
 import logging
+import re
+from typing import Literal
+from uuid import UUID
 
-from pydantic import BaseModel, Field, ValidationError, field_validator
+from pydantic import (
+    AnyHttpUrl,
+    BaseModel,
+    ValidationError,
+    field_serializer,
+    field_validator,
+    model_validator,
+)
 
 from pipeline_btw.db.connection import get_connection
 
@@ -8,8 +18,22 @@ logger = logging.getLogger(__name__)
 
 
 class Brewery(BaseModel):
-    id: str
-    brewery_type: str
+    id: UUID
+    brewery_type: Literal[
+        "micro",
+        "nano",
+        "regional",
+        "brewpub",
+        "large",
+        "planning",
+        "bar",
+        "contract",
+        "proprietor",
+        "closed",
+        "taproom",
+        "cidery",
+        "beergarden",
+    ]
     name: str
     address_1: str | None = None
     address_2: str | None = None
@@ -21,12 +45,39 @@ class Brewery(BaseModel):
     longitude: float | None = None
     latitude: float | None = None
     phone: str | None = None
-    website_url: str | None = None
+    website_url: AnyHttpUrl | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def convert_empty_strings_to_none(cls, data: dict) -> dict:
+        """Globally converts empty strings to None across all fields."""
+        if isinstance(data, dict):
+            for key, value in data.items():
+                if isinstance(value, str) and value.strip() == "":
+                    data[key] = None
+                elif value == "null":
+                    data[key] = None
+        return data
+
+    @field_serializer("website_url")
+    def serialize_url(self, website_url: AnyHttpUrl | None, _info):
+        """Converts URL back into a plain Python string for database loading"""
+        return str(website_url) if website_url else None
+
+    @field_validator("phone", mode="before")
+    @classmethod
+    def clean_phone(cls, val):
+        """Strips everything except digits (e.g., '(123) 456-7890' -> '1234567890')"""
+        if val is None:
+            return val
+        cleaned = re.sub(r"\D", "", str(val))
+        return cleaned if cleaned else None
 
     @field_validator("longitude", "latitude", mode="before")
     @classmethod
     def clean_coordinates(cls, val):
-        if val == "" or val == "null" or val is None:
+        """Ensures bad string nulls don't crash flaot parsing."""
+        if val is None:
             return None
         return val
 
