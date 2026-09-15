@@ -26,6 +26,9 @@ x-airflow-common: &airflow-common
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
     # The following line can be used to set a custom config file, stored in the local config folder
     AIRFLOW_CONFIG: "/opt/airflow/config/airflow.cfg"
+    # URL seen by DAG code inside the containers while .env's DB_URL is the host-side database.
+    # Set PIPELINE_DB_URL in .env to point DAGs somewhere else, e.g. the host postgres.
+    DB_URL: ${PIPELINE_DB_URL:-postgresql://airflow:airflow@postgres:5432/breweries}
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
